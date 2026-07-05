@@ -15,4 +15,4 @@
 **/*.tgz
 
 /artifacts/
-/docs/internal/
+/docs/internal
