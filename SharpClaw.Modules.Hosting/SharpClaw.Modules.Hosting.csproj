@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>SharpClaw.Modules.Hosting</PackageId>
+    <Authors>mkn8rn</Authors>
+    <Description>Loads SharpClaw .NET module assemblies in collectible contexts while sharing host-owned contract assemblies.</Description>
+    <PackageTags>sharpclaw;modules;hosting;sdk</PackageTags>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/mkn8rn/SharpClaw.ModuleSDK</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/mkn8rn/SharpClaw.ModuleSDK</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
