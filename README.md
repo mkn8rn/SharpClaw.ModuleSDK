@@ -19,3 +19,11 @@ For module developers, the practical shape is the same in either case: build a
 module directory, and describe it with `module.json`. Unless a host explicitly
 opts into in-process loading, expect the module to be run by the out-of-process
 host.
+
+JavaScript and Python modules use the same out-of-process protocol shape. The
+`@sharpclaw/module-host` and `sharpclaw-module-host` helper packages let those
+module processes declare tools, endpoints, lifecycle hooks, storage contracts,
+and host capability calls without hand-writing the SharpClaw control server.
+SharpClaw still owns process launch and provides the control address, token,
+module directory, and module data directory through protocol environment
+variables.
