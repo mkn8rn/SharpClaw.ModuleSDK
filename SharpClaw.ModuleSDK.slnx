@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="SharpClaw.Modules.DotNetSidecarHost/SharpClaw.Modules.DotNetSidecarHost.csproj" />
+  <Project Path="SharpClaw.Modules.DotNetSidecarHost.Tests/SharpClaw.Modules.DotNetSidecarHost.Tests.csproj" />
   <Project Path="SharpClaw.Modules.Hosting/SharpClaw.Modules.Hosting.csproj" />
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />

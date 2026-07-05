@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>true</IsPackable>
+    <PackageId>SharpClaw.Modules.DotNetSidecarHost</PackageId>
+    <Authors>mkn8rn</Authors>
+    <Description>Runs compiled SharpClaw .NET modules as sidecar processes over the SharpClaw foreign-module protocol.</Description>
+    <PackageTags>sharpclaw;modules;sidecar;runtime</PackageTags>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/mkn8rn/SharpClaw.ModuleSDK</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/mkn8rn/SharpClaw.ModuleSDK</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddDotNetSidecarHostPayloadToPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpClaw.Contracts" Version="0.3.15" />
+    <PackageReference Include="SharpClaw.Core" Version="0.1.105-alpha" />
+    <PackageReference Include="SharpClaw.Providers.Common" Version="0.1.2-beta" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SharpClaw.Modules.Hosting\SharpClaw.Modules.Hosting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <Target Name="AddDotNetSidecarHostPayloadToPackage">
+    <ItemGroup>
+      <_DotNetSidecarHostPayload Include="$(TargetDir)**\*"
+                                  Exclude="$(TargetDir)**\*.pdb;$(TargetDir)**\*.xml;$(TargetDir)**\*.nupkg" />
+      <TfmSpecificPackageFile Include="@(_DotNetSidecarHostPayload)"
+                              PackagePath="tools\$(TargetFramework)\any\" />
+    </ItemGroup>
+  </Target>
+</Project>
