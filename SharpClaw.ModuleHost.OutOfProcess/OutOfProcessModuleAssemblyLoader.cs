@@ -2,7 +2,7 @@ using System.Reflection;
 using SharpClaw.Contracts.Modules;
 using SharpClaw.Core.Modules;
 
-internal static class DotNetSidecarModuleAssemblyLoader
+internal static class OutOfProcessModuleAssemblyLoader
 {
     public static ISharpClawCoreModule CreateModuleInstance(
         Assembly assembly,

@@ -11,14 +11,14 @@ using SharpClaw.Contracts.Providers;
 using SharpClaw.Contracts.Tasks;
 using SharpClaw.Core.Modules;
 using SharpClaw.Core.Modules.Foreign;
-using SharpClaw.Modules.Hosting;
+using SharpClaw.ModuleHost.InProcess;
 using SharpClaw.Providers.Common;
 using SharpClaw.Contracts.Modules.Foreign;
 
-var process = await DotNetSidecarHost.CreateAsync(args);
+var process = await OutOfProcessHost.CreateAsync(args);
 await process.RunAsync();
 
-internal sealed class DotNetSidecarHost
+internal sealed class OutOfProcessHost
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -34,7 +34,7 @@ internal sealed class DotNetSidecarHost
     private readonly ModuleManifestRuntimeInfo _runtimeInfo;
     private readonly string _controlToken;
 
-    private DotNetSidecarHost(
+    private OutOfProcessHost(
         WebApplication app,
         ModuleLoadContext loadContext,
         ISharpClawCoreModule module,
@@ -50,16 +50,16 @@ internal sealed class DotNetSidecarHost
         _controlToken = controlToken;
     }
 
-    public static async Task<DotNetSidecarHost> CreateAsync(string[] args)
+    public static async Task<OutOfProcessHost> CreateAsync(string[] args)
     {
         var moduleDir = ReadRequiredEnv(ForeignModuleProtocol.ModuleDirectoryEnv);
         var controlAddress = new Uri(ReadRequiredEnv(ForeignModuleProtocol.ControlAddressEnv));
         var controlToken = ReadRequiredEnv(ForeignModuleProtocol.ControlTokenEnv);
-        var manifestPath = DotNetSidecarPathGuard.EnsureContainedIn(
+        var manifestPath = OutOfProcessPathGuard.EnsureContainedIn(
             Path.Combine(moduleDir, "module.json"),
             moduleDir);
         var manifestJson = await File.ReadAllTextAsync(manifestPath);
-        var manifest = JsonSerializer.Deserialize<ModuleManifest>(manifestJson, DotNetSidecarJsonOptions.Manifest)
+        var manifest = JsonSerializer.Deserialize<ModuleManifest>(manifestJson, OutOfProcessJsonOptions.Manifest)
             ?? throw new InvalidOperationException($"Failed to parse module manifest '{manifestPath}'.");
         var runtimeInfo = ModuleManifestRuntimeInfo.FromJson(manifestJson);
         runtimeInfo.EnsureDotNetEntryAssembly(manifest);
@@ -68,10 +68,10 @@ internal sealed class DotNetSidecarHost
         {
             throw new InvalidOperationException(
                 $"Module '{manifest.Id}' must set hostMode to '{ModuleManifestRuntimeInfo.HostModeSidecar}' " +
-                "to run in the shared .NET sidecar host.");
+                "to run in the default .NET out-of-process host.");
         }
 
-        var entryAssemblyPath = DotNetSidecarPathGuard.EnsureContainedIn(
+        var entryAssemblyPath = OutOfProcessPathGuard.EnsureContainedIn(
             Path.Combine(moduleDir, manifest.EntryAssembly),
             moduleDir);
         if (!File.Exists(entryAssemblyPath))
@@ -81,7 +81,7 @@ internal sealed class DotNetSidecarHost
 
         var loadContext = new ModuleLoadContext(entryAssemblyPath);
         var assembly = loadContext.LoadFromAssemblyPath(Path.GetFullPath(entryAssemblyPath));
-        var module = DotNetSidecarModuleAssemblyLoader.CreateModuleInstance(
+        var module = OutOfProcessModuleAssemblyLoader.CreateModuleInstance(
             assembly,
             manifest,
             runtimeInfo,
@@ -107,8 +107,8 @@ internal sealed class DotNetSidecarHost
         builder.WebHost.UseUrls(controlAddress.ToString());
         builder.Services.AddHttpClient();
         builder.Services.TryAddSingleton(TimeProvider.System);
-        builder.Services.TryAddSingleton<ICliIdResolver, SidecarCliIdResolver>();
-        DotNetSidecarHostCapabilityProxies.Register(builder.Services);
+        builder.Services.TryAddSingleton<ICliIdResolver, OutOfProcessCliIdResolver>();
+        OutOfProcessHostCapabilityProxies.Register(builder.Services);
         module.ConfigureServices(builder.Services);
         RegisterTaskOperationDescriptorProviders(builder.Services, module.GetType().Assembly);
 
@@ -128,7 +128,7 @@ internal sealed class DotNetSidecarHost
 
         if (module is ISharpClawRuntimeModule runtimeModule)
             runtimeModule.MapEndpoints(app);
-        var host = new DotNetSidecarHost(app, loadContext, module, manifest, runtimeInfo, controlToken);
+        var host = new OutOfProcessHost(app, loadContext, module, manifest, runtimeInfo, controlToken);
         host.MapControlEndpoints();
         return host;
     }
@@ -476,7 +476,7 @@ internal sealed class DotNetSidecarHost
         {
             using var scope = _app.Services.CreateScope();
             var executor = ResolveTaskOperationExecutor(scope.ServiceProvider, request.OperationKey);
-            var context = new DotNetSidecarTaskOperationExecutionContext(
+            var context = new OutOfProcessTaskOperationExecutionContext(
                 scope.ServiceProvider,
                 request.Context,
                 ct);
@@ -501,12 +501,12 @@ internal sealed class DotNetSidecarHost
                     $"Task operation '{request.Statement.StatementKey}' does not support invocation execution.");
             }
 
-            var context = new DotNetSidecarTaskOperationExecutionContext(
+            var context = new OutOfProcessTaskOperationExecutionContext(
                 scope.ServiceProvider,
                 request.Context,
                 ct);
             var result = await invocationExecutor.ExecuteInvocationAsync(
-                new DotNetSidecarTaskStatementInvocation(request.Statement),
+                new OutOfProcessTaskStatementInvocation(request.Statement),
                 context);
             return Json(context.ToResponse(result, request.Statement.ResultVariable));
         });
@@ -522,7 +522,7 @@ internal sealed class DotNetSidecarHost
                 return Results.NotFound(new { error = $"Task trigger attribute handler '{request.HandlerName}' not found." });
             }
 
-            var context = new DotNetSidecarTaskTriggerAttributeContext(request.Context);
+            var context = new OutOfProcessTaskTriggerAttributeContext(request.Context);
             return Json(new ForeignModuleTaskTriggerAttributeHandleResponse(
                 handler.Handle(context),
                 context.Diagnostics));
@@ -535,7 +535,7 @@ internal sealed class DotNetSidecarHost
             using var scope = _app.Services.CreateScope();
             var source = ResolveTaskTriggerSource(scope.ServiceProvider, request.TriggerKeys);
             var contexts = request.Contexts
-                .Select(context => new DotNetSidecarTaskTriggerSourceContext(
+                .Select(context => new OutOfProcessTaskTriggerSourceContext(
                     context,
                     scope.ServiceProvider.GetRequiredService<ITaskInstanceLauncher>()))
                 .Cast<ITaskTriggerSourceContext>()
@@ -1070,7 +1070,7 @@ internal sealed class DotNetSidecarHost
 
     private sealed record ConsoleCaptureResult(bool Success, string? Stdout, string? Stderr);
 
-    private sealed class DotNetSidecarTaskOperationExecutionContext : ITaskOperationExecutionContext
+    private sealed class OutOfProcessTaskOperationExecutionContext : ITaskOperationExecutionContext
     {
         private readonly ForeignModuleTaskOperationExecutionContextSnapshot _snapshot;
         private readonly Guid _initialChannelId;
@@ -1079,7 +1079,7 @@ internal sealed class DotNetSidecarHost
         private readonly List<ForeignModuleTaskRegisteredEventHandlerDescriptor> _registeredEventHandlers = [];
         private readonly List<ITaskEventHandler> _eventHandlers = [];
 
-        public DotNetSidecarTaskOperationExecutionContext(
+        public OutOfProcessTaskOperationExecutionContext(
             IServiceProvider services,
             ForeignModuleTaskOperationExecutionContextSnapshot snapshot,
             CancellationToken cancellationToken)
@@ -1098,11 +1098,11 @@ internal sealed class DotNetSidecarHost
 
             foreach (var handler in snapshot.EventHandlers ?? [])
             {
-                _eventHandlers.Add(new DotNetSidecarTaskEventHandler(
+                _eventHandlers.Add(new OutOfProcessTaskEventHandler(
                     handler.ModuleTriggerKey,
                     handler.ParameterName,
                     handler.HandlerCallbackId,
-                    services.GetService<DotNetSidecarHostCapabilityClient>(),
+                    services.GetService<OutOfProcessHostCapabilityClient>(),
                     () => ChannelId,
                     SnapshotVariables,
                     ApplyHostContextResponse));
@@ -1142,7 +1142,7 @@ internal sealed class DotNetSidecarHost
             if (string.IsNullOrWhiteSpace(_snapshot.ContextCallbackId))
                 throw new NotSupportedException("Nested task step execution requires an active host context callback.");
 
-            var client = Services.GetService<DotNetSidecarHostCapabilityClient>()
+            var client = Services.GetService<OutOfProcessHostCapabilityClient>()
                 ?? throw new NotSupportedException("Nested task step execution requires host capability access.");
             var response = await client.PostAsync<
                 ForeignModuleTaskContextExecuteStatementsRequest,
@@ -1181,7 +1181,7 @@ internal sealed class DotNetSidecarHost
                 moduleTriggerKey,
                 parameterName,
                 descriptorBody));
-            _eventHandlers.Add(new DotNetSidecarLocalTaskEventHandler(
+            _eventHandlers.Add(new OutOfProcessLocalTaskEventHandler(
                 moduleTriggerKey,
                 parameterName,
                 this,
@@ -1272,11 +1272,11 @@ internal sealed class DotNetSidecarHost
         }
     }
 
-    private sealed record DotNetSidecarTaskEventHandler(
+    private sealed record OutOfProcessTaskEventHandler(
         string? ModuleTriggerKey,
         string? ParameterName,
         string? HandlerCallbackId,
-        DotNetSidecarHostCapabilityClient? Client,
+        OutOfProcessHostCapabilityClient? Client,
         Func<Guid> GetChannelId,
         Func<IReadOnlyDictionary<string, JsonElement>> SnapshotVariables,
         Action<ForeignModuleTaskContextExecutionResponse> ApplyResponse) : ITaskEventHandler
@@ -1285,7 +1285,7 @@ internal sealed class DotNetSidecarHost
         {
             if (string.IsNullOrWhiteSpace(HandlerCallbackId) || Client is null)
                 throw new NotSupportedException(
-                    "Executing a parent task event handler from a .NET sidecar requires an active host callback.");
+                    "Executing a parent task event handler from a .NET out-of-process module requires an active host callback.");
 
             var response = await Client.PostAsync<
                 ForeignModuleTaskContextExecuteEventHandlerRequest,
@@ -1302,17 +1302,17 @@ internal sealed class DotNetSidecarHost
         }
     }
 
-    private sealed record DotNetSidecarLocalTaskEventHandler(
+    private sealed record OutOfProcessLocalTaskEventHandler(
         string? ModuleTriggerKey,
         string? ParameterName,
-        DotNetSidecarTaskOperationExecutionContext Context,
+        OutOfProcessTaskOperationExecutionContext Context,
         IReadOnlyList<ITaskStatementInvocation> Body) : ITaskEventHandler
     {
         public async Task ExecuteBodyAsync(CancellationToken ct) =>
             _ = await Context.ExecuteStatementsAsync(Body, ct);
     }
 
-    private sealed class DotNetSidecarTaskStatementInvocation(
+    private sealed class OutOfProcessTaskStatementInvocation(
         ForeignModuleTaskStatementInvocationDescriptor descriptor) : ITaskStatementInvocation
     {
         public string StatementKey => descriptor.StatementKey;
@@ -1324,12 +1324,12 @@ internal sealed class DotNetSidecarHost
         public string? ModuleTriggerKey => descriptor.ModuleTriggerKey;
         public string? HandlerParameter => descriptor.HandlerParameter;
         public IReadOnlyList<ITaskStatementInvocation>? Body =>
-            descriptor.Body is null ? null : [.. descriptor.Body.Select(step => new DotNetSidecarTaskStatementInvocation(step))];
+            descriptor.Body is null ? null : [.. descriptor.Body.Select(step => new OutOfProcessTaskStatementInvocation(step))];
         public IReadOnlyList<ITaskStatementInvocation>? ElseBody =>
-            descriptor.ElseBody is null ? null : [.. descriptor.ElseBody.Select(step => new DotNetSidecarTaskStatementInvocation(step))];
+            descriptor.ElseBody is null ? null : [.. descriptor.ElseBody.Select(step => new OutOfProcessTaskStatementInvocation(step))];
     }
 
-    private sealed class DotNetSidecarTaskTriggerSourceContext(
+    private sealed class OutOfProcessTaskTriggerSourceContext(
         ForeignModuleTaskTriggerSourceContextDescriptor descriptor,
         ITaskInstanceLauncher launcher) : ITaskTriggerSourceContext
     {
@@ -1348,7 +1348,7 @@ internal sealed class DotNetSidecarHost
                 ct);
     }
 
-    private sealed class DotNetSidecarTaskTriggerAttributeContext(
+    private sealed class OutOfProcessTaskTriggerAttributeContext(
         ForeignModuleTaskTriggerAttributeContextDescriptor descriptor) : TaskTriggerAttributeContext
     {
         private readonly List<ForeignModuleTaskTriggerAttributeDiagnostic> _diagnostics = [];
@@ -1453,7 +1453,7 @@ internal sealed class DotNetSidecarHost
     }
 }
 
-internal static class DotNetSidecarHostConversions
+internal static class OutOfProcessHostConversions
 {
     public static ForeignModuleHealthResponse ToForeignResponse(this ModuleHealthStatus status)
     {

@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using SharpClaw.Contracts.Modules;
 
-internal sealed class SidecarCliIdResolver : ICliIdResolver
+internal sealed class OutOfProcessCliIdResolver : ICliIdResolver
 {
     private static readonly JsonSerializerOptions JsonPrint = new()
     {

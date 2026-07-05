@@ -1,4 +1,4 @@
-internal static class DotNetSidecarPathGuard
+internal static class OutOfProcessPathGuard
 {
     public static string EnsureContainedIn(string combined, string parentDir)
     {

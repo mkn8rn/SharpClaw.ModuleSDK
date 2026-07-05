@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-internal static class DotNetSidecarJsonOptions
+internal static class OutOfProcessJsonOptions
 {
     public static readonly JsonSerializerOptions Manifest = new()
     {

@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.Loader;
 
-namespace SharpClaw.Modules.Hosting;
+namespace SharpClaw.ModuleHost.InProcess;
 
 /// <summary>
 /// Collectible <see cref="AssemblyLoadContext"/> for external modules.
@@ -29,7 +29,7 @@ public sealed class ModuleLoadContext : AssemblyLoadContext
         "SharpClaw.Application.Core",
         "SharpClaw.Application.Infrastructure",
         "SharpClaw.Gateway.Abstractions",
-        "SharpClaw.Modules.Hosting",
+        "SharpClaw.ModuleHost.InProcess",
         "Microsoft.Extensions.",
         "Microsoft.AspNetCore.",
         "Microsoft.EntityFrameworkCore",

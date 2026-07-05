@@ -10,13 +10,13 @@ using SharpClaw.Contracts.Tasks;
 using SharpClaw.Core.Modules.Foreign;
 using SharpClaw.Contracts.Modules.Foreign;
 
-internal static class DotNetSidecarHostCapabilityProxies
+internal static class OutOfProcessHostCapabilityProxies
 {
     public static void Register(IServiceCollection services)
     {
         services.TryAddSingleton<ISharpClawEventSinkRegistry, NoOpEventSinkRegistry>();
 
-        var client = DotNetSidecarHostCapabilityClient.TryCreateFromEnvironment();
+        var client = OutOfProcessHostCapabilityClient.TryCreateFromEnvironment();
         if (client is null)
             return;
 
@@ -45,7 +45,7 @@ internal static class DotNetSidecarHostCapabilityProxies
         }
     }
 
-    private sealed class ModuleConfigStoreProxy(DotNetSidecarHostCapabilityClient client) : IModuleConfigStore
+    private sealed class ModuleConfigStoreProxy(OutOfProcessHostCapabilityClient client) : IModuleConfigStore
     {
         public async Task<string?> GetAsync(string key, CancellationToken ct = default) =>
             (await client.PostAsync<ForeignModuleConfigGetRequest, ForeignModuleConfigGetResponse>(
@@ -75,7 +75,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).Values;
     }
 
-    private sealed class TaskAuthoringProxy(DotNetSidecarHostCapabilityClient client) : ITaskAuthoring
+    private sealed class TaskAuthoringProxy(OutOfProcessHostCapabilityClient client) : ITaskAuthoring
     {
         public TaskValidationResponse ValidateDefinition(string sourceText) =>
             client.PostAsync<ForeignModuleTaskSourceRequest, TaskValidationResponse>(
@@ -126,7 +126,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).Deleted;
     }
 
-    private sealed class TaskInstanceLauncherProxy(DotNetSidecarHostCapabilityClient client) : ITaskInstanceLauncher
+    private sealed class TaskInstanceLauncherProxy(OutOfProcessHostCapabilityClient client) : ITaskInstanceLauncher
     {
         public async Task<Guid> LaunchAsync(
             Guid taskDefinitionId,
@@ -148,7 +148,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).InstanceId;
     }
 
-    private sealed class HostQueueMetricsProxy(DotNetSidecarHostCapabilityClient client) : IHostQueueMetrics
+    private sealed class HostQueueMetricsProxy(OutOfProcessHostCapabilityClient client) : IHostQueueMetrics
     {
         public async Task<double> GetPendingJobCountAsync(CancellationToken ct) =>
             (await ReadAsync(ct)).PendingJobCount;
@@ -166,7 +166,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct);
     }
 
-    private sealed class CoreEntityIdProviderProxy(DotNetSidecarHostCapabilityClient client) : ICoreEntityIdProvider
+    private sealed class CoreEntityIdProviderProxy(OutOfProcessHostCapabilityClient client) : ICoreEntityIdProvider
     {
         public async Task<List<Guid>> GetAgentIdsAsync(CancellationToken ct = default) =>
             [.. (await client.PostAsync<object, ForeignModuleIdsResponse>(
@@ -193,7 +193,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).Items.Select(item => (item.Id, item.Name))];
     }
 
-    private sealed class HostAgentBridgeProxy(DotNetSidecarHostCapabilityClient client) : IHostAgentBridge
+    private sealed class HostAgentBridgeProxy(OutOfProcessHostCapabilityClient client) : IHostAgentBridge
     {
         public async Task<string?> ChatAsync(
             Guid instanceId,
@@ -385,7 +385,7 @@ internal static class DotNetSidecarHostCapabilityProxies
             response.Id ?? throw new InvalidOperationException("SharpClaw host returned an empty ID.");
     }
 
-    private sealed class AgentManagerProxy(DotNetSidecarHostCapabilityClient client) : IAgentManager
+    private sealed class AgentManagerProxy(OutOfProcessHostCapabilityClient client) : IAgentManager
     {
         public async Task<(Guid AgentId, string ModelName, string AgentName)> CreateSubAgentAsync(
             string name,
@@ -435,7 +435,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct);
     }
 
-    private sealed class ModuleInfoProviderProxy(DotNetSidecarHostCapabilityClient client) : IModuleInfoProvider
+    private sealed class ModuleInfoProviderProxy(OutOfProcessHostCapabilityClient client) : IModuleInfoProvider
     {
         public IReadOnlyList<ModuleInfo> GetAllModules() =>
             client.PostAsync<object, ForeignModuleInfoListResponse>(
@@ -447,7 +447,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 .Modules;
     }
 
-    private sealed class ModelInfoProviderProxy(DotNetSidecarHostCapabilityClient client) : IModelInfoProvider
+    private sealed class ModelInfoProviderProxy(OutOfProcessHostCapabilityClient client) : IModelInfoProvider
     {
         public async Task<ModelProviderInfo?> GetModelProviderInfoAsync(
             Guid modelId,
@@ -466,7 +466,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).Path;
     }
 
-    private sealed class ModelRegistrarProxy(DotNetSidecarHostCapabilityClient client) : IModelRegistrar
+    private sealed class ModelRegistrarProxy(OutOfProcessHostCapabilityClient client) : IModelRegistrar
     {
         public async Task<Guid> EnsureProviderAsync(
             string providerKey,
@@ -511,7 +511,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).Value;
     }
 
-    private sealed class ModuleLifecycleManagerProxy(DotNetSidecarHostCapabilityClient client) : IModuleLifecycleManager
+    private sealed class ModuleLifecycleManagerProxy(OutOfProcessHostCapabilityClient client) : IModuleLifecycleManager
     {
         private readonly RemoteToolModule _remoteToolModule = new(client);
         private string? _externalModulesDir;
@@ -571,7 +571,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).State;
     }
 
-    private sealed class ProtocolContractResolverProxy(DotNetSidecarHostCapabilityClient client)
+    private sealed class ProtocolContractResolverProxy(OutOfProcessHostCapabilityClient client)
         : IForeignModuleProtocolContractResolver
     {
         public IForeignModuleProtocolContractInvoker? Resolve(string contractName)
@@ -591,7 +591,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 .Contracts;
     }
 
-    private sealed class ModuleStorageGatewayProxy(DotNetSidecarHostCapabilityClient client) : IModuleStorageGateway
+    private sealed class ModuleStorageGatewayProxy(OutOfProcessHostCapabilityClient client) : IModuleStorageGateway
     {
         public IReadOnlyList<ModuleStorageContractDescriptor> ListContracts() =>
             client.PostAsync<object, ForeignModuleStorageContractsResponse>(
@@ -620,19 +620,19 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).Result;
     }
 
-    private sealed class AgentJobControllerProxy(DotNetSidecarHostCapabilityClient client) : IAgentJobController
+    private sealed class AgentJobControllerProxy(OutOfProcessHostCapabilityClient client) : IAgentJobController
     {
         public Task<AgentJobResponse> SubmitJobAsync(
             Guid channelId,
             SubmitAgentJobRequest request,
             CancellationToken ct = default) =>
-            throw new NotSupportedException("Submitting new jobs from a .NET sidecar is not exposed yet.");
+            throw new NotSupportedException("Submitting new jobs from a .NET out-of-process module is not exposed yet.");
 
         public Task<AgentJobResponse?> StopJobAsync(
             Guid jobId,
             string? requiredActionPrefix = null,
             CancellationToken ct = default) =>
-            throw new NotSupportedException("Stopping arbitrary jobs from a .NET sidecar is not exposed yet.");
+            throw new NotSupportedException("Stopping arbitrary jobs from a .NET out-of-process module is not exposed yet.");
 
         public Task AddJobLogAsync(
             Guid jobId,
@@ -710,7 +710,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct);
     }
 
-    private sealed class AgentJobReaderProxy(DotNetSidecarHostCapabilityClient client) : IAgentJobReader
+    private sealed class AgentJobReaderProxy(OutOfProcessHostCapabilityClient client) : IAgentJobReader
     {
         public async Task<AgentJobResponse?> GetJobAsync(
             Guid jobId,
@@ -761,7 +761,7 @@ internal static class DotNetSidecarHostCapabilityProxies
     }
 
     private sealed class ProtocolContractInvokerProxy(
-        DotNetSidecarHostCapabilityClient client,
+        OutOfProcessHostCapabilityClient client,
         ForeignModuleProtocolContractExport export) : IForeignModuleProtocolContractInvoker
     {
         public string ContractName => export.ContractName;
@@ -782,7 +782,7 @@ internal static class DotNetSidecarHostCapabilityProxies
                 ct)).Result;
     }
 
-    private sealed class RemoteToolModule(DotNetSidecarHostCapabilityClient client) : ISharpClawCoreModule
+    private sealed class RemoteToolModule(OutOfProcessHostCapabilityClient client) : ISharpClawCoreModule
     {
         public string Id => "sharpclaw_host_tools";
         public string DisplayName => "SharpClaw Host Tools";
@@ -814,7 +814,7 @@ internal static class DotNetSidecarHostCapabilityProxies
     }
 }
 
-internal sealed class DotNetSidecarHostCapabilityClient
+internal sealed class OutOfProcessHostCapabilityClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -826,7 +826,7 @@ internal sealed class DotNetSidecarHostCapabilityClient
     private readonly HttpClient _httpClient;
     private readonly string _token;
 
-    private DotNetSidecarHostCapabilityClient(Uri address, string token)
+    private OutOfProcessHostCapabilityClient(Uri address, string token)
     {
         _httpClient = new HttpClient
         {
@@ -836,13 +836,13 @@ internal sealed class DotNetSidecarHostCapabilityClient
         _token = token;
     }
 
-    public static DotNetSidecarHostCapabilityClient? TryCreateFromEnvironment()
+    public static OutOfProcessHostCapabilityClient? TryCreateFromEnvironment()
     {
         var address = Environment.GetEnvironmentVariable(ForeignModuleHostCapabilityProtocol.AddressEnv);
         var token = Environment.GetEnvironmentVariable(ForeignModuleHostCapabilityProtocol.TokenEnv);
         return string.IsNullOrWhiteSpace(address) || string.IsNullOrWhiteSpace(token)
             ? null
-            : new DotNetSidecarHostCapabilityClient(new Uri(address), token);
+            : new OutOfProcessHostCapabilityClient(new Uri(address), token);
     }
 
     public async Task PostAckAsync<TRequest>(string path, TRequest request, CancellationToken ct = default) =>

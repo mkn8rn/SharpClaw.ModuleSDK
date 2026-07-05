@@ -6,9 +6,9 @@ using NUnit.Framework;
 using SharpClaw.Contracts.Modules;
 using SharpClaw.Core.Modules;
 
-namespace SharpClaw.Modules.DotNetSidecarHost.Tests;
+namespace SharpClaw.ModuleHost.OutOfProcess.Tests;
 
-public sealed class DotNetSidecarModuleAssemblyLoaderTests
+public sealed class OutOfProcessModuleAssemblyLoaderTests
 {
     [Test]
     public void CreateModuleInstanceUsesExplicitModuleType()
@@ -19,11 +19,11 @@ public sealed class DotNetSidecarModuleAssemblyLoaderTests
             Entrypoint: null,
             ModuleType: typeof(LoaderSampleModule).FullName);
 
-        var module = DotNetSidecarModuleAssemblyLoader.CreateModuleInstance(
+        var module = OutOfProcessModuleAssemblyLoader.CreateModuleInstance(
             Assembly.GetExecutingAssembly(),
             manifest,
             runtimeInfo,
-            "SharpClaw.Modules.DotNetSidecarHost.Tests.dll");
+            "SharpClaw.ModuleHost.OutOfProcess.Tests.dll");
 
         module.Id.Should().Be("loader_sample_module");
     }
@@ -33,11 +33,11 @@ public sealed class DotNetSidecarModuleAssemblyLoaderTests
     {
         var manifest = Manifest("loader_sample_module");
 
-        var module = DotNetSidecarModuleAssemblyLoader.CreateModuleInstance(
+        var module = OutOfProcessModuleAssemblyLoader.CreateModuleInstance(
             Assembly.GetExecutingAssembly(),
             manifest,
             ModuleManifestRuntimeInfo.DotNetDefault,
-            "SharpClaw.Modules.DotNetSidecarHost.Tests.dll");
+            "SharpClaw.ModuleHost.OutOfProcess.Tests.dll");
 
         module.Should().BeOfType<LoaderSampleModule>();
     }
@@ -47,11 +47,11 @@ public sealed class DotNetSidecarModuleAssemblyLoaderTests
     {
         var manifest = Manifest("missing_module");
 
-        var act = () => DotNetSidecarModuleAssemblyLoader.CreateModuleInstance(
+        var act = () => OutOfProcessModuleAssemblyLoader.CreateModuleInstance(
             Assembly.GetExecutingAssembly(),
             manifest,
             ModuleManifestRuntimeInfo.DotNetDefault,
-            "SharpClaw.Modules.DotNetSidecarHost.Tests.dll");
+            "SharpClaw.ModuleHost.OutOfProcess.Tests.dll");
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*declares module id 'missing_module'*");
@@ -60,10 +60,10 @@ public sealed class DotNetSidecarModuleAssemblyLoaderTests
     [Test]
     public void PathGuardRejectsDirectoryTraversal()
     {
-        var parent = Path.Combine(Path.GetTempPath(), "sharpclaw-sidecar-parent");
+        var parent = Path.Combine(Path.GetTempPath(), "sharpclaw-outofprocess-parent");
         var escaped = Path.Combine(parent, "..", "outside", "module.json");
 
-        var act = () => DotNetSidecarPathGuard.EnsureContainedIn(escaped, parent);
+        var act = () => OutOfProcessPathGuard.EnsureContainedIn(escaped, parent);
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*escapes the allowed directory*");
@@ -76,7 +76,7 @@ public sealed class DotNetSidecarModuleAssemblyLoaderTests
 
         var act = () => JsonSerializer.Deserialize<Dictionary<string, object?>>(
             tooDeep,
-            DotNetSidecarJsonOptions.Manifest);
+            OutOfProcessJsonOptions.Manifest);
 
         act.Should().Throw<JsonException>();
     }

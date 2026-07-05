@@ -1,26 +1,26 @@
-# SharpClaw.Modules.Hosting
+# SharpClaw.ModuleHost.InProcess
 
-`SharpClaw.Modules.Hosting` is for host and runtime code that loads compiled
-SharpClaw .NET module assemblies. Its `ModuleLoadContext` creates a collectible
-assembly load context for one module entry DLL, resolves that module's private
-dependencies from the module folder, and keeps host-owned contract assemblies
-in the default load context so module objects can still be cast to the host's
-SharpClaw contract interfaces.
+`SharpClaw.ModuleHost.InProcess` supports the opt-in in-process .NET module
+host path for SharpClaw. It provides `ModuleLoadContext`, a collectible assembly
+load context that loads a module entry DLL from its module directory while
+delegating host-owned contracts back to the default load context. That keeps
+interfaces such as `ISharpClawCoreModule` shared between the host and the loaded
+module instead of accidentally loading a second copy of the contract assembly.
 
-Reference this package when you are writing a SharpClaw host, gateway, test
-harness, or runtime adapter that needs to load a module DLL from disk. A normal
-module implementation usually references `SharpClaw.Contracts` for
-`ISharpClawCoreModule` and related DTOs; it only needs this package when it is
-itself responsible for loading another module assembly.
+Out-of-process hosting is the normal SharpClaw module execution model.
+In-process hosting is a limited mode for hosts that deliberately enable it and
+can accept its tighter coupling to the host process. Reference this package when
+you are writing SharpClaw runtime code, a test harness, or an explicitly
+in-process host adapter that needs to load a module DLL directly.
 
-The smallest host-side shape is to create one load context for the module entry
-assembly, load the assembly through that context, and then find the module type
-using the shared contract interfaces already loaded by the host.
+The smallest in-process host shape creates one load context for the module
+entry assembly, loads the assembly through that context, and then finds the
+module type using the shared contract interfaces already loaded by the host.
 
 ```csharp
 using System.Reflection;
 using SharpClaw.Contracts.Modules;
-using SharpClaw.Modules.Hosting;
+using SharpClaw.ModuleHost.InProcess;
 
 var entryAssemblyPath = Path.Combine(moduleDirectory, "MyModule.dll");
 var loadContext = new ModuleLoadContext(entryAssemblyPath);

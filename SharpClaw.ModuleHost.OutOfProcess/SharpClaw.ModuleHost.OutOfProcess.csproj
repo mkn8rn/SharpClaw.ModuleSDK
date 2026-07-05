@@ -2,20 +2,20 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsPackable>true</IsPackable>
-    <PackageId>SharpClaw.Modules.DotNetSidecarHost</PackageId>
-    <Version>0.1.4-alpha</Version>
-    <AssemblyVersion>0.1.4.0</AssemblyVersion>
-    <FileVersion>0.1.4.0</FileVersion>
-    <InformationalVersion>0.1.4-alpha</InformationalVersion>
+    <PackageId>SharpClaw.ModuleHost.OutOfProcess</PackageId>
+    <Version>0.1.0-alpha</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <InformationalVersion>0.1.0-alpha</InformationalVersion>
     <Authors>mkn8rn</Authors>
-    <Description>Runs compiled SharpClaw .NET modules as sidecar processes over the SharpClaw foreign-module protocol.</Description>
-    <PackageTags>sharpclaw;modules;sidecar;runtime</PackageTags>
+    <Description>Runs SharpClaw .NET modules in the default out-of-process host model over the SharpClaw foreign-module protocol.</Description>
+    <PackageTags>sharpclaw;modulehost;out-of-process;modules;runtime</PackageTags>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/mkn8rn/SharpClaw.ModuleSDK</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/mkn8rn/SharpClaw.ModuleSDK</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddDotNetSidecarHostPayloadToPackage</TargetsForTfmSpecificContentInPackage>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddOutOfProcessHostPayloadToPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,18 +25,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SharpClaw.Modules.Hosting\SharpClaw.Modules.Hosting.csproj" />
+    <ProjectReference Include="..\SharpClaw.ModuleHost.InProcess\SharpClaw.ModuleHost.InProcess.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
-  <Target Name="AddDotNetSidecarHostPayloadToPackage">
+  <Target Name="AddOutOfProcessHostPayloadToPackage">
     <ItemGroup>
-      <_DotNetSidecarHostPayload Include="$(TargetDir)**\*"
+      <_OutOfProcessHostPayload Include="$(TargetDir)**\*"
                                   Exclude="$(TargetDir)**\*.pdb;$(TargetDir)**\*.xml;$(TargetDir)**\*.nupkg" />
-      <TfmSpecificPackageFile Include="@(_DotNetSidecarHostPayload)"
+      <TfmSpecificPackageFile Include="@(_OutOfProcessHostPayload)"
                               PackagePath="tools\$(TargetFramework)\any\" />
     </ItemGroup>
   </Target>

@@ -12,6 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SharpClaw.Modules.DotNetSidecarHost\SharpClaw.Modules.DotNetSidecarHost.csproj" />
+    <ProjectReference Include="..\SharpClaw.ModuleHost.OutOfProcess\SharpClaw.ModuleHost.OutOfProcess.csproj" />
   </ItemGroup>
 </Project>
