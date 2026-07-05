@@ -6,9 +6,8 @@ using SharpClaw.Contracts.DTOs.AgentActions;
 using SharpClaw.Contracts.DTOs.Tasks;
 using SharpClaw.Contracts.Entities.Core.Jobs;
 using SharpClaw.Contracts.Modules;
-using SharpClaw.Contracts.Tasks;
-using SharpClaw.Core.Modules.Foreign;
 using SharpClaw.Contracts.Modules.Foreign;
+using SharpClaw.Contracts.Tasks;
 
 internal static class OutOfProcessHostCapabilityProxies
 {

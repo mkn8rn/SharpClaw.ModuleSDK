@@ -7,13 +7,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SharpClaw.Contracts.Modules;
+using SharpClaw.Contracts.Modules.Foreign;
 using SharpClaw.Contracts.Providers;
 using SharpClaw.Contracts.Tasks;
-using SharpClaw.Core.Modules;
-using SharpClaw.Core.Modules.Foreign;
 using SharpClaw.ModuleHost.InProcess;
 using SharpClaw.Providers.Common;
-using SharpClaw.Contracts.Modules.Foreign;
 
 var process = await OutOfProcessHost.CreateAsync(args);
 await process.RunAsync();

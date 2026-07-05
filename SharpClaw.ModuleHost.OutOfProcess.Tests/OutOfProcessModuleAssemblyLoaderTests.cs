@@ -4,7 +4,6 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using SharpClaw.Contracts.Modules;
-using SharpClaw.Core.Modules;
 
 namespace SharpClaw.ModuleHost.OutOfProcess.Tests;
 

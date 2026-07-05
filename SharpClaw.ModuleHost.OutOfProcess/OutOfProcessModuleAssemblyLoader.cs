@@ -1,6 +1,5 @@
 using System.Reflection;
 using SharpClaw.Contracts.Modules;
-using SharpClaw.Core.Modules;
 
 internal static class OutOfProcessModuleAssemblyLoader
 {
