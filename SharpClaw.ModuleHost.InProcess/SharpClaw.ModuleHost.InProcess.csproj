@@ -10,9 +10,9 @@
     <Description>Supports opt-in in-process SharpClaw .NET module loading with collectible assembly contexts and host-shared contract assemblies.</Description>
     <PackageTags>sharpclaw;modulehost;in-process;modules;runtime</PackageTags>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/mkn8rn/SharpClaw.ModuleSDK</RepositoryUrl>
+    <RepositoryUrl>https://github.com/SharpClaw-NET/SharpClaw.ModuleSDK</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/mkn8rn/SharpClaw.ModuleSDK</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/SharpClaw-NET/SharpClaw.ModuleSDK</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
