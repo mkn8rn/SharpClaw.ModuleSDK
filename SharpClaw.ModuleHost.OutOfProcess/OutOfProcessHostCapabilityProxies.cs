@@ -4,7 +4,7 @@ using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SharpClaw.Contracts.DTOs.AgentActions;
 using SharpClaw.Contracts.DTOs.Tasks;
-using SharpClaw.Contracts.Entities.Core.Jobs;
+using SharpClaw.Contracts.Enums;
 using SharpClaw.Contracts.Modules;
 using SharpClaw.Contracts.Modules.Foreign;
 using SharpClaw.Contracts.Tasks;
@@ -627,7 +627,7 @@ internal static class OutOfProcessHostCapabilityProxies
             CancellationToken ct = default) =>
             throw new NotSupportedException("Submitting new jobs from a .NET out-of-process module is not exposed yet.");
 
-        public Task<AgentJobResponse?> StopJobAsync(
+        public Task<AgentJobDetailResponse?> StopJobAsync(
             Guid jobId,
             string? requiredActionPrefix = null,
             CancellationToken ct = default) =>
@@ -711,7 +711,7 @@ internal static class OutOfProcessHostCapabilityProxies
 
     private sealed class AgentJobReaderProxy(OutOfProcessHostCapabilityClient client) : IAgentJobReader
     {
-        public async Task<AgentJobResponse?> GetJobAsync(
+        public async Task<AgentJobDetailResponse?> GetJobAsync(
             Guid jobId,
             CancellationToken ct = default) =>
             (await client.PostAsync<ForeignModuleTaskIdRequest, ForeignModuleJobGetResponse>(
@@ -719,31 +719,22 @@ internal static class OutOfProcessHostCapabilityProxies
                 new ForeignModuleTaskIdRequest { Id = jobId },
                 ct)).Job;
 
-        public async Task<IReadOnlyList<AgentJobResponse>> ListJobsByActionPrefixAsync(
+        public async Task<AgentJobSummaryPageResponse> ListJobSummariesByActionPrefixAsync(
             string actionKeyPrefix,
             Guid? resourceId = null,
+            string? cursor = null,
+            int take = 50,
             CancellationToken ct = default) =>
-            (await client.PostAsync<ForeignModuleJobActionPrefixRequest, ForeignModuleJobListResponse>(
-                ForeignModuleHostCapabilityProtocol.JobListByActionPrefixPath,
-                new ForeignModuleJobActionPrefixRequest
-                {
-                    ActionKeyPrefix = actionKeyPrefix,
-                    ResourceId = resourceId,
-                },
-                ct)).Jobs;
-
-        public async Task<IReadOnlyList<AgentJobSummaryResponse>> ListJobSummariesByActionPrefixAsync(
-            string actionKeyPrefix,
-            Guid? resourceId = null,
-            CancellationToken ct = default) =>
-            (await client.PostAsync<ForeignModuleJobActionPrefixRequest, ForeignModuleJobSummaryListResponse>(
+            (await client.PostAsync<ForeignModuleJobActionPrefixRequest, ForeignModuleJobSummaryPageResponse>(
                 ForeignModuleHostCapabilityProtocol.JobListSummariesByActionPrefixPath,
                 new ForeignModuleJobActionPrefixRequest
                 {
                     ActionKeyPrefix = actionKeyPrefix,
                     ResourceId = resourceId,
+                    Cursor = cursor,
+                    Take = take,
                 },
-                ct)).Jobs;
+                ct)).Page;
 
         public async Task<bool> JobExistsWithActionPrefixAsync(
             Guid jobId,
