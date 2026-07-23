@@ -56,15 +56,6 @@ HOST_CAPABILITY_PATHS = {
     "job_exists_with_action_prefix": "/.sharpclaw/host/job/exists-with-action-prefix",
     "contracts_list": "/.sharpclaw/host/contracts/list",
     "contract_invoke": "/.sharpclaw/host/contracts/invoke",
-    "task_validate": "/.sharpclaw/host/tasks/validate",
-    "task_create": "/.sharpclaw/host/tasks/create",
-    "task_get": "/.sharpclaw/host/tasks/get",
-    "task_list": "/.sharpclaw/host/tasks/list",
-    "task_update": "/.sharpclaw/host/tasks/update",
-    "task_delete": "/.sharpclaw/host/tasks/delete",
-    "task_launch": "/.sharpclaw/host/tasks/launch",
-    "task_context_execute_steps": "/.sharpclaw/host/tasks/context/execute-steps",
-    "task_context_execute_event_handler": "/.sharpclaw/host/tasks/context/event-handler/execute",
     "core_agent_ids": "/.sharpclaw/host/core/agents/ids",
     "core_channel_ids": "/.sharpclaw/host/core/channels/ids",
     "core_agent_lookup": "/.sharpclaw/host/core/agents/lookup",
@@ -251,39 +242,6 @@ class HostCapabilitiesClient:
                 "parameters": parameters or {},
             },
         ).get("result")
-
-    def validate_task(self, source_text: str) -> dict[str, Any]:
-        return self._post_json(HOST_CAPABILITY_PATHS["task_validate"], {"sourceText": source_text})
-
-    def create_task(self, source_text: str) -> dict[str, Any] | None:
-        return self._post_json(HOST_CAPABILITY_PATHS["task_create"], {"sourceText": source_text}).get("definition")
-
-    def get_task(self, task_id: str) -> dict[str, Any] | None:
-        return self._post_json(HOST_CAPABILITY_PATHS["task_get"], {"id": task_id}).get("definition")
-
-    def list_tasks(self) -> list[dict[str, Any]]:
-        return self._post_json(HOST_CAPABILITY_PATHS["task_list"], {}).get("definitions", [])
-
-    def update_task(self, task_id: str, **values: Any) -> dict[str, Any] | None:
-        return self._post_json(
-            HOST_CAPABILITY_PATHS["task_update"],
-            {"id": task_id, **values},
-        ).get("definition")
-
-    def delete_task(self, task_id: str) -> bool:
-        return bool(self._post_json(HOST_CAPABILITY_PATHS["task_delete"], {"id": task_id}).get("deleted", False))
-
-    def launch_task(self, task_definition_id: str, **values: Any) -> str | None:
-        return self._post_json(
-            HOST_CAPABILITY_PATHS["task_launch"],
-            {"taskDefinitionId": task_definition_id, **values},
-        ).get("instanceId")
-
-    def execute_task_context_steps(self, parameters: dict[str, Any]) -> dict[str, Any]:
-        return self._post_json(HOST_CAPABILITY_PATHS["task_context_execute_steps"], parameters)
-
-    def execute_task_context_event_handler(self, parameters: dict[str, Any]) -> dict[str, Any]:
-        return self._post_json(HOST_CAPABILITY_PATHS["task_context_execute_event_handler"], parameters)
 
     def get_agent_ids(self) -> list[str]:
         return self._post_json(HOST_CAPABILITY_PATHS["core_agent_ids"], {}).get("ids", [])

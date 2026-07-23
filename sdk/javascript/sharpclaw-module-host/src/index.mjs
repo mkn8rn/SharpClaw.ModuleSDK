@@ -43,15 +43,6 @@ export const hostCapabilityPaths = {
   jobExistsWithActionPrefix: '/.sharpclaw/host/job/exists-with-action-prefix',
   contractsList: '/.sharpclaw/host/contracts/list',
   contractInvoke: '/.sharpclaw/host/contracts/invoke',
-  taskValidate: '/.sharpclaw/host/tasks/validate',
-  taskCreate: '/.sharpclaw/host/tasks/create',
-  taskGet: '/.sharpclaw/host/tasks/get',
-  taskList: '/.sharpclaw/host/tasks/list',
-  taskUpdate: '/.sharpclaw/host/tasks/update',
-  taskDelete: '/.sharpclaw/host/tasks/delete',
-  taskLaunch: '/.sharpclaw/host/tasks/launch',
-  taskContextExecuteSteps: '/.sharpclaw/host/tasks/context/execute-steps',
-  taskContextExecuteEventHandler: '/.sharpclaw/host/tasks/context/event-handler/execute',
   coreAgentIds: '/.sharpclaw/host/core/agents/ids',
   coreChannelIds: '/.sharpclaw/host/core/channels/ids',
   coreAgentLookup: '/.sharpclaw/host/core/agents/lookup',
@@ -460,20 +451,6 @@ export function createHostCapabilitiesClient(options = {}) {
         operation,
         parameters
       }))?.result,
-    validateTask: sourceText => call(hostCapabilityPaths.taskValidate, { sourceText }),
-    createTask: async sourceText =>
-      (await call(hostCapabilityPaths.taskCreate, { sourceText }))?.definition,
-    getTask: async id => (await call(hostCapabilityPaths.taskGet, { id }))?.definition,
-    listTasks: async () => (await call(hostCapabilityPaths.taskList))?.definitions ?? [],
-    updateTask: async (id, values = {}) =>
-      (await call(hostCapabilityPaths.taskUpdate, { id, ...values }))?.definition,
-    deleteTask: async id => (await call(hostCapabilityPaths.taskDelete, { id }))?.deleted ?? false,
-    launchTask: async (taskDefinitionId, values = {}) =>
-      (await call(hostCapabilityPaths.taskLaunch, { taskDefinitionId, ...values }))?.instanceId,
-    executeTaskContextSteps: async parameters =>
-      await call(hostCapabilityPaths.taskContextExecuteSteps, parameters),
-    executeTaskContextEventHandler: async parameters =>
-      await call(hostCapabilityPaths.taskContextExecuteEventHandler, parameters),
     getAgentIds: async () => (await call(hostCapabilityPaths.coreAgentIds))?.ids ?? [],
     getChannelIds: async () => (await call(hostCapabilityPaths.coreChannelIds))?.ids ?? [],
     getAgentLookupItems: async () => (await call(hostCapabilityPaths.coreAgentLookup))?.items ?? [],

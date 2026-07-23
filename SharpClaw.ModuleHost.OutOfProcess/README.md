@@ -6,7 +6,7 @@ module directory, passes the module directory and private control endpoint
 through protocol environment variables, and communicates with the module over
 the SharpClaw foreign-module protocol. The host loads the module entry assembly,
 validates the module identity declared in `module.json`, exposes lifecycle and
-tool endpoints, and proxies host capabilities such as tasks, providers, module
+tool endpoints, and proxies host capabilities such as providers, module
 storage, and agent operations back to the parent SharpClaw runtime.
 
 A practical .NET module package is a module DLL plus `module.json` in the module
